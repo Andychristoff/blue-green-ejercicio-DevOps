@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: menu-app-green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: menu-app
+      version: green
+  template:
+    metadata:
+      labels:
+        app: menu-app
+        version: green
+    spec:
+      containers:
+      - name: menu-app
+        image: menu-app:v2
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 4173
