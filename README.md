@@ -29,4 +29,11 @@ npm run preview
 
 The footer shows a version string (`v1.0.0` by default), overridable via the
 `VITE_APP_VERSION` environment variable — handy for telling the blue and
-green deployments apart at a glance.
+green deployments apart at a glance. If that string contains `blue` or
+`green`, the UI accent colour (top bar, prices, links, focus ring) switches
+to match, so you can see which deployment the service points at.
+
+## "Sort by price" toggle
+
+Above the menu there's a live results counter and a checkbox to sort every
+dish by price (flat list) instead of grouping by category.

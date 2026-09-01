@@ -1,8 +1,23 @@
 import MenuItem from './MenuItem'
 
-function MenuList({ items }) {
+function MenuList({ items, grouped = true }) {
   if (items.length === 0) {
     return <p className="empty-state">No dishes match your search.</p>
+  }
+
+  if (!grouped) {
+    return (
+      <div className="menu-list">
+        <section className="menu-category">
+          <h2>By price</h2>
+          <ul>
+            {items.map((item) => (
+              <MenuItem key={item.id} item={item} />
+            ))}
+          </ul>
+        </section>
+      </div>
+    )
   }
 
   const categories = [...new Set(items.map((item) => item.category))]
