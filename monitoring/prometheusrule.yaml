@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: menu-app-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring-stack   # Prometheus solo carga reglas con la label de su Helm release
+spec:
+  groups:
+    - name: menu-app.orders
+      rules:
+        # X = 10 órdenes, Y = 5 minutos (editar el número y la ventana para cambiar el umbral)
+        - alert: DemasiadasOrdenesDeUnProducto
+          expr: sum by (product) (increase(menu_orders_total[5m])) > 10
+          labels:
+            severity: warning
+          annotations:
+            summary: "Más de 10 órdenes de {{ $labels.product }} en 5 minutos"
+            description: "{{ $labels.product }} recibió {{ $value | printf \"%.0f\" }} órdenes en los últimos 5 minutos."
+        # Umbral sobre el total de órdenes, sin importar el producto
+        - alert: DemasiadasOrdenesTotales
+          expr: sum(increase(menu_orders_total[5m])) > 30
+          labels:
+            severity: critical
+          annotations:
+            summary: "Más de 30 órdenes en 5 minutos"
+            description: "El menú recibió {{ $value | printf \"%.0f\" }} órdenes en los últimos 5 minutos."
+    - name: menu-app.availability
+      rules:
+        - alert: MenuAppCaida
+          expr: sum(up{job="menu-app-service"}) == 0 or absent(up{job="menu-app-service"})
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "menu-app no responde al scraping de Prometheus"
