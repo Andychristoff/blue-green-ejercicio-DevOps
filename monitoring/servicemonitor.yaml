@@ -13,6 +13,6 @@ spec:
     matchLabels:
       app: menu-app
   endpoints:
-    - port: metrics
+    - port: http
       path: /metrics
       interval: 15s

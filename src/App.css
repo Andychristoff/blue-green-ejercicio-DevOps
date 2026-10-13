@@ -203,3 +203,19 @@
     color: #aaa;
   }
 }
+
+.order-button {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.order-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -1,0 +1,35 @@
+# Envía las alertas por correo a una cuenta de Outlook. La contraseña va en un Secret que NO se versiona:
+#   kubectl create secret generic outlook-smtp -n monitoring --from-literal=password='CONTRASEÑA_DE_APLICACION'
+# Sin el Secret las alertas igual se ven en la UI de Alertmanager y de Prometheus.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: menu-app
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: menu-app
+spec:
+  route:
+    receiver: email-outlook
+    groupBy: ["alertname", "product"]
+    groupWait: 10s
+    repeatInterval: 1h
+  receivers:
+    - name: email-outlook
+      emailConfigs:
+        - to: andres.christoff@correo.ucu.edu.uy
+          from: andres.christoff@correo.ucu.edu.uy
+          smarthost: smtp-mail.outlook.com:587
+          authUsername: andres.christoff@correo.ucu.edu.uy
+          authPassword:
+            name: outlook-smtp
+            key: password
+          requireTLS: true
+          sendResolved: true
+          headers:
+            - key: Subject
+              value: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+          html: |
+            {{ range .Alerts }}
+            <p><b>{{ .Annotations.summary }}</b><br>{{ .Annotations.description }}</p>
+            {{ end }}
