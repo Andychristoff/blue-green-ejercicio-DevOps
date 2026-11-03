@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+reports
+policies
+monitoring
+imagenesMD
+Entregable3
+*.md
+*.yaml
+*.tar
