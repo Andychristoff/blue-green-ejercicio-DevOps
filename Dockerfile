@@ -1,5 +1,8 @@
 FROM node:24-alpine AS build
 
+ARG VITE_APP_VERSION=2.0.0-green
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -9,6 +12,9 @@ COPY . .
 RUN npm run build
 
 FROM node:24-alpine
+
+ARG VITE_APP_VERSION=2.0.0-green
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
 
 WORKDIR /app
 
