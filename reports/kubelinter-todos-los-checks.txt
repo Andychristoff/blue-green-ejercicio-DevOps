@@ -1,0 +1,91 @@
+KubeLinter 0.8.3
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Object does not define any DNSConfig rules. (check: dnsconfig-options, remediation: Specify dnsconfig options in your Pod specification to ensure the expected DNS setting on the Pod. Refer to https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config for details.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) object has 1 replica but minimum required replicas is 3 (check: minimum-three-replicas, remediation: Increase the number of replicas in the deployment to at least three to increase the fault tolerance of the deployment.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) object does not define any node affinity rules. (check: no-node-affinity, remediation: Specify node-affinity in your pod specification to ensure that the orchestrator attempts to schedule replicas on specified nodes. Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity for details.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) object has no strategy type but must match regex ^(RollingUpdate|Rolling)$ (check: no-rolling-update-strategy, remediation: Use a rolling update strategy to avoid service disruption during an update. A rolling update strategy allows for pods to be systematicaly replaced in a controlled fashion to ensure no service disruption.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) pods created by this object are non-isolated (check: non-isolated-pod, remediation: Ensure pod does not accept unsafe traffic by isolating it with a NetworkPolicy. See https://cloud.redhat.com/blog/guide-to-kubernetes-ingress-network-policies for more details.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) no annotation matching "email=[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" found (check: required-annotation-email, remediation: Add an email annotation to your object with the email address of the object's owner.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) no label matching "owner=<any>" found (check: required-label-owner, remediation: Add an email annotation to your object with the name of the object's owner.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) object has a restart policy defined with '' but the only accepted restart policies are '[Always OnFailure]' (check: restart-policy, remediation: Set up the restart policy for your object to 'Always' or 'OnFailure' to increase the fault tolerance.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) error while processing resource: failed downloading schema at https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json: Get "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json": GET https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json giving up after 1 attempt(s): Get "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json": tls: failed to verify certificate: x509: certificate signed by unknown authority (check: schema-validation, remediation: Fix the resource to conform to the Kubernetes API schema.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at metadata. Expected order: [labels, name], got: [name, labels] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec. Expected order: [automountServiceAccountToken, containers, securityContext, volumes], got: [automountServiceAccountToken, securityContext, containers, volumes] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.securityContext. Expected order: [runAsGroup, runAsNonRoot, runAsUser, seccompProfile], got: [runAsNonRoot, runAsUser, runAsGroup, seccompProfile] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0]. Expected order: [image, imagePullPolicy, livenessProbe, name, ports, readinessProbe, resources, securityContext, volumeMounts], got: [name, image, imagePullPolicy, ports, resources, securityContext, readinessProbe, livenessProbe, volumeMounts] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].ports[0]. Expected order: [containerPort, name], got: [name, containerPort] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].resources. Expected order: [limits, requests], got: [requests, limits] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].securityContext. Expected order: [allowPrivilegeEscalation, capabilities, readOnlyRootFilesystem], got: [allowPrivilegeEscalation, readOnlyRootFilesystem, capabilities] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].volumeMounts[0]. Expected order: [mountPath, name], got: [name, mountPath] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.volumes[0]. Expected order: [emptyDir, name], got: [name, emptyDir] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Object does not define any DNSConfig rules. (check: dnsconfig-options, remediation: Specify dnsconfig options in your Pod specification to ensure the expected DNS setting on the Pod. Refer to https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config for details.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) object has 1 replica but minimum required replicas is 3 (check: minimum-three-replicas, remediation: Increase the number of replicas in the deployment to at least three to increase the fault tolerance of the deployment.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) object does not define any node affinity rules. (check: no-node-affinity, remediation: Specify node-affinity in your pod specification to ensure that the orchestrator attempts to schedule replicas on specified nodes. Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity for details.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) object has no strategy type but must match regex ^(RollingUpdate|Rolling)$ (check: no-rolling-update-strategy, remediation: Use a rolling update strategy to avoid service disruption during an update. A rolling update strategy allows for pods to be systematicaly replaced in a controlled fashion to ensure no service disruption.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) pods created by this object are non-isolated (check: non-isolated-pod, remediation: Ensure pod does not accept unsafe traffic by isolating it with a NetworkPolicy. See https://cloud.redhat.com/blog/guide-to-kubernetes-ingress-network-policies for more details.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) no annotation matching "email=[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" found (check: required-annotation-email, remediation: Add an email annotation to your object with the email address of the object's owner.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) no label matching "owner=<any>" found (check: required-label-owner, remediation: Add an email annotation to your object with the name of the object's owner.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) object has a restart policy defined with '' but the only accepted restart policies are '[Always OnFailure]' (check: restart-policy, remediation: Set up the restart policy for your object to 'Always' or 'OnFailure' to increase the fault tolerance.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) error while processing resource: failed downloading schema at https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json: Get "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json": GET https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json giving up after 1 attempt(s): Get "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/deployment-apps-v1.json": tls: failed to verify certificate: x509: certificate signed by unknown authority (check: schema-validation, remediation: Fix the resource to conform to the Kubernetes API schema.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at metadata. Expected order: [labels, name], got: [name, labels] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec. Expected order: [automountServiceAccountToken, containers, securityContext, volumes], got: [automountServiceAccountToken, securityContext, containers, volumes] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.securityContext. Expected order: [runAsGroup, runAsNonRoot, runAsUser, seccompProfile], got: [runAsNonRoot, runAsUser, runAsGroup, seccompProfile] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0]. Expected order: [image, imagePullPolicy, livenessProbe, name, ports, readinessProbe, resources, securityContext, volumeMounts], got: [name, image, imagePullPolicy, ports, resources, securityContext, readinessProbe, livenessProbe, volumeMounts] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].ports[0]. Expected order: [containerPort, name], got: [name, containerPort] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].resources. Expected order: [limits, requests], got: [requests, limits] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].securityContext. Expected order: [allowPrivilegeEscalation, capabilities, readOnlyRootFilesystem], got: [allowPrivilegeEscalation, readOnlyRootFilesystem, capabilities] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.containers[0].volumeMounts[0]. Expected order: [mountPath, name], got: [name, mountPath] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) Keys are not sorted at spec.template.spec.volumes[0]. Expected order: [emptyDir, name], got: [name, emptyDir] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+/dir/service.yaml: (object: <no namespace>/menu-app-service /v1, Kind=Service) "NodePort" service type is forbidden. (check: exposed-services, remediation: Ensure containers are not exposed through a forbidden service type such as NodePort or LoadBalancer.)
+
+/dir/service.yaml: (object: <no namespace>/menu-app-service /v1, Kind=Service) error while processing resource: failed downloading schema at https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/service-v1.json: Get "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/service-v1.json": GET https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/service-v1.json giving up after 1 attempt(s): Get "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/service-v1.json": tls: failed to verify certificate: x509: certificate signed by unknown authority (check: schema-validation, remediation: Fix the resource to conform to the Kubernetes API schema.)
+
+/dir/service.yaml: (object: <no namespace>/menu-app-service /v1, Kind=Service) Keys are not sorted at metadata. Expected order: [labels, name], got: [name, labels] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/service.yaml: (object: <no namespace>/menu-app-service /v1, Kind=Service) Keys are not sorted at spec. Expected order: [ports, selector, type], got: [type, selector, ports] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/service.yaml: (object: <no namespace>/menu-app-service /v1, Kind=Service) Keys are not sorted at spec.ports[0]. Expected order: [name, nodePort, port, protocol, targetPort], got: [name, protocol, port, targetPort, nodePort] (check: sorted-keys, remediation: Ensure that keys in your YAML manifest are sorted in alphabetical order to improve consistency and readability.)
+
+/dir/service.yaml: (object: <no namespace>/menu-app-service /v1, Kind=Service) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+Error: found 44 lint errors
