@@ -1,0 +1,32 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-requests-limits
+spec:
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [""]
+      apiVersions: [v1]
+      operations: [CREATE, UPDATE]
+      resources: [pods]
+    namespaceSelector:
+      matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values: [kube-system, kyverno, falco]
+  autogen:
+    podControllers:
+      controllers: [deployments, replicasets, statefulsets, daemonsets, jobs, cronjobs]
+  variables:
+  - name: containers
+    expression: >-
+      object.spec.containers +
+      (has(object.spec.initContainers) ? object.spec.initContainers : [])
+  validations:
+  - expression: >-
+      variables.containers.all(c,
+        has(c.resources) &&
+        has(c.resources.requests) && 'cpu' in c.resources.requests && 'memory' in c.resources.requests &&
+        has(c.resources.limits) && 'cpu' in c.resources.limits && 'memory' in c.resources.limits)
+    message: "Todos los contenedores tienen que definir requests y limits de cpu y memoria."
