@@ -1,0 +1,17 @@
+$ kubectl get validatingpolicies
+NAME                      AGE   READY
+disallow-latest-tag       63s   true
+require-non-root          63s   true
+require-requests-limits   63s   true
+
+$ kubectl apply -f bad-pod.yaml
+Error from server: error when creating "bad-pod.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy disallow-latest-tag failed: Las imagenes tienen que tener una etiqueta fija, no se permite latest ni dejarla sin etiqueta.; Policy require-non-root failed: Los contenedores tienen que correr con runAsNonRoot: true (en el pod o en cada contenedor).; Policy require-requests-limits failed: Todos los contenedores tienen que definir requests y limits de cpu y memoria.
+
+$ kubectl apply -f blue.yaml -f green.yaml
+deployment.apps/menu-app-blue unchanged
+deployment.apps/menu-app-green unchanged
+
+$ kubectl get pods -l app=menu-app
+NAME                             READY   STATUS    RESTARTS   AGE
+menu-app-blue-67d7bd8cbf-wxkvh   1/1     Running   0          47s
+menu-app-green-f8df5449f-vv9wm   1/1     Running   0          47s

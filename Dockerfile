@@ -1,12 +1,34 @@
-# Dockerfile estandar para una aplicación de node
-FROM node:20-slim
+FROM node:24-alpine AS build
+
+ARG VITE_APP_VERSION=2.0.0-green
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npm run build
 
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
+FROM node:24-alpine
+
+ARG VITE_APP_VERSION=2.0.0-green
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
+
+WORKDIR /app
+
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+    /opt/yarn* /usr/local/bin/yarn /usr/local/bin/yarnpkg
+
+COPY --from=build --chown=1000:1000 /app/package.json /app/vite.config.js /app/.env.production ./
+COPY --from=build --chown=1000:1000 /app/src/data ./src/data
+COPY --from=build --chown=1000:1000 /app/node_modules ./node_modules
+COPY --from=build --chown=1000:1000 /app/dist ./dist
+
+USER 1000
+
+EXPOSE 4173
+
+CMD ["node", "node_modules/vite/bin/vite.js", "preview", "--host", "0.0.0.0", "--port", "4173"]

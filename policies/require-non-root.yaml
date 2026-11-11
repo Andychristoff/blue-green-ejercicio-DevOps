@@ -1,0 +1,39 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-non-root
+spec:
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [""]
+      apiVersions: [v1]
+      operations: [CREATE, UPDATE]
+      resources: [pods]
+    namespaceSelector:
+      matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values: [kube-system, kyverno, falco]
+  autogen:
+    podControllers:
+      controllers: [deployments, replicasets, statefulsets, daemonsets, jobs, cronjobs]
+  variables:
+  - name: containers
+    expression: >-
+      object.spec.containers +
+      (has(object.spec.initContainers) ? object.spec.initContainers : [])
+  validations:
+  - expression: >-
+      variables.containers.all(c,
+        has(c.securityContext) && has(c.securityContext.runAsNonRoot)
+          ? c.securityContext.runAsNonRoot
+          : has(object.spec.securityContext) && has(object.spec.securityContext.runAsNonRoot) &&
+            object.spec.securityContext.runAsNonRoot)
+    message: "Los contenedores tienen que correr con runAsNonRoot: true (en el pod o en cada contenedor)."
+  - expression: >-
+      !(has(object.spec.securityContext) && has(object.spec.securityContext.runAsUser) &&
+        object.spec.securityContext.runAsUser == 0) &&
+      variables.containers.all(c,
+        !(has(c.securityContext) && has(c.securityContext.runAsUser) && c.securityContext.runAsUser == 0))
+    message: "No se permite runAsUser: 0."

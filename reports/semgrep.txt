@@ -1,0 +1,96 @@
+                   
+                   
+┌─────────────────┐
+│ 8 Code Findings │
+└─────────────────┘
+                              
+    .github/workflows/main.yml
+    ❯❱ yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+          ❰❰ Blocking ❱❱
+          GitHub Actions step uses a mutable tag or branch reference. Tags and branch names can be silently   
+          repointed by the action owner, enabling supply-chain attacks — as seen in the trivy-action and kics-
+          github-action compromises. Pin the reference to a full 40-character commit SHA instead, e.g. `uses: 
+          actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608`.                                         
+          Details: https://sg.run/2LgAL                                                                       
+                                                                                                              
+           10┆ uses: actions/checkout@v4
+            ⋮┆----------------------------------------
+           12┆ uses: docker/login-action@v3
+            ⋮┆----------------------------------------
+           17┆ uses: docker/build-push-action@v5
+              
+    Dockerfile
+   ❯❯❱ dockerfile.security.missing-user.missing-user
+          ❰❰ Blocking ❱❱
+          By not specifying a USER, a program in the container may run as 'root'. This is a security hazard.
+          If an attacker can control a process running as root, they may have control over the container.   
+          Ensure that the last USER in a Dockerfile is a USER other than 'root'.                            
+          Details: https://sg.run/Gbvn                                                                      
+                                                                                                            
+           ▶▶┆ Autofix ▶ USER non-root CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
+           12┆ CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
+             
+    blue.yaml
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           16┆ spec:
+   
+    ❯❱ yaml.kubernetes.security.allow-privilege-escalation-no-securitycontext.allow-privilege-escalation-no-
+       securitycontext                                                                                      
+          ❰❰ Blocking ❱❱
+          In Kubernetes, each pod runs in its own isolated environment with its own set of security policies. 
+          However, certain container images may contain `setuid` or `setgid` binaries that could allow an     
+          attacker to perform privilege escalation and gain access to sensitive resources. To mitigate this   
+          risk, it's recommended to add a `securityContext` to the container in the pod, with the parameter   
+          `allowPrivilegeEscalation` set to `false`. This will prevent the container from running any         
+          privileged processes and limit the impact of any potential attacks. By adding a `securityContext` to
+          your Kubernetes pod, you can help to ensure that your containerized applications are more secure and
+          less vulnerable to privilege escalation attacks.                                                    
+          Details: https://sg.run/eleR                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ securityContext: allowPrivilegeEscalation: false name
+           18┆ - name: menu-app
+              
+    green.yaml
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           16┆ spec:
+   
+    ❯❱ yaml.kubernetes.security.allow-privilege-escalation-no-securitycontext.allow-privilege-escalation-no-
+       securitycontext                                                                                      
+          ❰❰ Blocking ❱❱
+          In Kubernetes, each pod runs in its own isolated environment with its own set of security policies. 
+          However, certain container images may contain `setuid` or `setgid` binaries that could allow an     
+          attacker to perform privilege escalation and gain access to sensitive resources. To mitigate this   
+          risk, it's recommended to add a `securityContext` to the container in the pod, with the parameter   
+          `allowPrivilegeEscalation` set to `false`. This will prevent the container from running any         
+          privileged processes and limit the impact of any potential attacks. By adding a `securityContext` to
+          your Kubernetes pod, you can help to ensure that your containerized applications are more secure and
+          less vulnerable to privilege escalation attacks.                                                    
+          Details: https://sg.run/eleR                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ securityContext: allowPrivilegeEscalation: false name
+           18┆ - name: menu-app
+

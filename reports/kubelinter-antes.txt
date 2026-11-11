@@ -1,0 +1,28 @@
+Unable to find image 'stackrox/kube-linter:latest' locally
+latest: Pulling from stackrox/kube-linter
+857e680c4a7c: Pulling fs layer
+510af8224d10: Download complete
+608ede1f3225: Download complete
+857e680c4a7c: Download complete
+857e680c4a7c: Pull complete
+Digest: sha256:f2bfce7879206d32f69ab6572c376f916643f54ca291ac38cf7d01ef591ff3f9
+Status: Downloaded newer image for stackrox/kube-linter:latest
+KubeLinter 0.8.3
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) container "menu-app" does not have a read-only root file system (check: no-read-only-root-fs, remediation: Set readOnlyRootFilesystem to true in the container securityContext.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) container "menu-app" is not set to runAsNonRoot (check: run-as-non-root, remediation: Set runAsUser to a non-zero number and runAsNonRoot to true in your pod or container securityContext. Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ for details.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) container "menu-app" has cpu request 0 (check: unset-cpu-requirements, remediation: Set CPU requests for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+/dir/blue.yaml: (object: <no namespace>/menu-app-blue apps/v1, Kind=Deployment) container "menu-app" has memory limit 0 (check: unset-memory-requirements, remediation: Set memory limits for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) container "menu-app" does not have a read-only root file system (check: no-read-only-root-fs, remediation: Set readOnlyRootFilesystem to true in the container securityContext.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) container "menu-app" is not set to runAsNonRoot (check: run-as-non-root, remediation: Set runAsUser to a non-zero number and runAsNonRoot to true in your pod or container securityContext. Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ for details.Error: found 8 lint errors
+)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) container "menu-app" has cpu request 0 (check: unset-cpu-requirements, remediation: Set CPU requests for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+/dir/green.yaml: (object: <no namespace>/menu-app-green apps/v1, Kind=Deployment) container "menu-app" has memory limit 0 (check: unset-memory-requirements, remediation: Set memory limits for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+

@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: menu-app-green
+  labels:
+    app: menu-app
+    version: green
 spec:
   replicas: 1
   selector:
@@ -14,9 +17,47 @@ spec:
         app: menu-app
         version: green
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: menu-app
-        image: menu-app:v2
+        image: menu-app:v3-green
         imagePullPolicy: Never
         ports:
-        - containerPort: 4173
+        - name: http
+          containerPort: 4173
+        resources:
+          requests:
+            cpu: 50m
+            memory: 96Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        volumeMounts:
+        - name: vite-temp
+          mountPath: /app/node_modules/.vite-temp
+      volumes:
+      - name: vite-temp
+        emptyDir: {}
