@@ -1,0 +1,70 @@
+# Snyk CLI 1.1308.4 - escaneo de dependencias (npm)
+# Fecha: 2026-11-15
+# Comando (desde la raiz del repositorio):
+#   npx -y snyk@1.1308.4 test --dev
+# --dev incluye las devDependencies: vite figura como devDependency pero se ejecuta
+# en produccion, porque el contenedor sirve la app con "vite preview".
+#
+# Resultado: 86 dependencias analizadas, 0 vulnerabilidades (0 criticas).
+
+
+Testing C:\Users\sebaf\OneDrive\Desktop\DEVOPS\Entregable 2\blue-green-ejercicio-DevOps...
+
+Organization:      sebastian-freire
+Package manager:   npm
+Target file:       package-lock.json
+Project name:      blue-green-ejercicio-devops
+Open source:       no
+Project path:      C:\Users\sebaf\OneDrive\Desktop\DEVOPS\Entregable 2\blue-green-ejercicio-DevOps
+Licenses:          enabled
+
+✔ Tested 86 dependencies for known issues, no vulnerable paths found.
+
+Tip: Detected multiple supported manifests (1), use --all-projects to scan all of them at once.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+
+
+==========================================================================================
+# Comparacion: dependencias anteriores al fix del Entregable 3 (commit 5f6f402)
+# Se tomaron package.json y package-lock.json del commit 4805d65 (antes de "npm audit fix")
+# y se analizaron con el mismo comando, en una carpeta aparte.
+#
+# Resultado: 6 vulnerabilidades en vite@8.2.2 (0 criticas, 1 alta, 4 medias, 1 baja).
+# Correccion: actualizar vite a 8.2.4 o superior. El proyecto ya usa vite 8.3.5.
+==========================================================================================
+
+
+Testing C:\Users\sebaf\OneDrive\Desktop\DEVOPS\Entregable 2\blue-green-ejercicio-DevOps\Entregable 4\snyk-antes...
+
+Tested 86 dependencies for known issues, found 6 issues, 6 vulnerable paths.
+
+
+Issues to fix by upgrading:
+
+  Upgrade vite@8.2.2 to vite@8.2.4 to fix
+  ✗ Cross-site Scripting (XSS) (new) [Low Severity][https://security.snyk.io/vuln/SNYK-JS-VITE-21282049] in vite@8.2.2
+    introduced by vite@8.2.2
+  ✗ Arbitrary Argument Injection (new) [Medium Severity][https://security.snyk.io/vuln/SNYK-JS-VITE-21282012] in vite@8.2.2
+    introduced by vite@8.2.2
+  ✗ Command Injection (new) [Medium Severity][https://security.snyk.io/vuln/SNYK-JS-VITE-21282030] in vite@8.2.2
+    introduced by vite@8.2.2
+  ✗ Directory Traversal (new) [Medium Severity][https://security.snyk.io/vuln/SNYK-JS-VITE-21282039] in vite@8.2.2
+    introduced by vite@8.2.2
+  ✗ Directory Traversal (new) [Medium Severity][https://security.snyk.io/vuln/SNYK-JS-VITE-21282045] in vite@8.2.2
+    introduced by vite@8.2.2
+  ✗ Arbitrary Command Injection (new) [High Severity][https://security.snyk.io/vuln/SNYK-JS-VITE-21282024] in vite@8.2.2
+    introduced by vite@8.2.2
+
+
+
+Organization:      sebastian-freire
+Package manager:   npm
+Target file:       package-lock.json
+Project name:      blue-green-ejercicio-devops
+Open source:       no
+Project path:      C:\Users\sebaf\OneDrive\Desktop\DEVOPS\Entregable 2\blue-green-ejercicio-DevOps\Entregable 4\snyk-antes
+Licenses:          enabled

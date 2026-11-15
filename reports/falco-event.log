@@ -1,2 +1,6 @@
-23:28:10.003928871: Notice A shell was spawned in a container with an attached terminal | evt_type=execve user=<NA> user_uid=1000 user_loginuid=-1 process=sh proc_exepath=/bin/busybox parent=<NA> command=sh -c whoami; id; ls /app terminal=34816 exe_flags=EXE_LOWER_LAYER container_id=4d3a5f84f858 container_name=menu-app container_image_repository=docker.io/library/menu-app container_image_tag=v3-green k8s_pod_name=menu-app-green-f8df5449f-vv9wm k8s_ns_name=default
-23:28:31.301003112: Notice A shell was spawned in a container with an attached terminal | evt_type=execve user=<NA> user_uid=1000 user_loginuid=-1 process=sh proc_exepath=/bin/busybox parent=<NA> command=sh terminal=34816 exe_flags=EXE_LOWER_LAYER container_id=4d3a5f84f858 container_name=menu-app container_image_repository=docker.io/library/menu-app container_image_tag=v3-green k8s_pod_name=menu-app-green-f8df5449f-vv9wm k8s_ns_name=default
+# Alerta de Falco - regla "Search Private Keys or Passwords" (prioridad WARNING, MITRE T1552.001)
+# Accion: kubectl exec menu-app-green-d5885db5-rrxt5 -- find / -name id_rsa
+# Se ejecuto find dentro del contenedor de la app buscando claves SSH privadas, como haria un
+# atacante que ya tiene acceso al contenedor y busca credenciales para moverse a otros sistemas.
+
+20:15:58.043140782: Warning Grep private keys or passwords activities found | evt_type=execve user=<NA> user_uid=1000 user_loginuid=-1 process=find proc_exepath=/bin/busybox parent=containerd-shim command=find / -name id_rsa terminal=0 exe_flags=EXE_LOWER_LAYER container_id=ffbe48913107 container_name=menu-app container_image_repository=docker.io/library/menu-app container_image_tag=v3-green k8s_pod_name=menu-app-green-d5885db5-rrxt5 k8s_ns_name=default

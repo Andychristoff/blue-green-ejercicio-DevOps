@@ -1,0 +1,93 @@
+# Validacion de politicas de Kyverno
+# Fecha: 2026-11-15 17:07:41
+# Contexto de kubectl: minikube
+
+===== 1. Kyverno instalado =====
+$ kubectl get pods -n kyverno
+NAME                                             READY   STATUS    RESTARTS       AGE
+kyverno-admission-controller-75c55c6475-pnhlp    1/1     Running   1 (2m3s ago)   11d
+kyverno-background-controller-7f5648c454-h56mr   1/1     Running   2 (66s ago)    11d
+kyverno-cleanup-controller-6b96f7d9b-2blph       1/1     Running   1 (2m3s ago)   11d
+kyverno-reports-controller-7866559564-lzqw8      1/1     Running   2 (30s ago)    11d
+
+===== 2. Politicas aplicadas =====
+$ kubectl apply -f policies/
+validatingpolicy.policies.kyverno.io/disallow-latest-tag unchanged
+validatingpolicy.policies.kyverno.io/disallow-privileged unchanged
+validatingpolicy.policies.kyverno.io/require-non-root unchanged
+validatingpolicy.policies.kyverno.io/require-requests-limits unchanged
+
+$ kubectl get validatingpolicies
+NAME                      AGE   READY
+disallow-latest-tag       11d   true
+disallow-privileged       64s   true
+require-non-root          11d   true
+require-requests-limits   11d   true
+
+===== 3. Manifiestos que incumplen una politica cada uno =====
+----- Politica disallow-latest-tag: tests/kyverno/pod-latest.yaml -----
+$ kubectl apply -f tests/kyverno/pod-latest.yaml
+Error from server: error when creating "tests/kyverno/pod-latest.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy disallow-latest-tag failed: Las imagenes tienen que tener una etiqueta fija, no se permite latest ni dejarla sin etiqueta.
+
+>> OK: rechazado por Kyverno
+
+----- Politica require-requests-limits: tests/kyverno/pod-sin-limites.yaml -----
+$ kubectl apply -f tests/kyverno/pod-sin-limites.yaml
+Error from server: error when creating "tests/kyverno/pod-sin-limites.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy require-requests-limits failed: Todos los contenedores tienen que definir requests y limits de cpu y memoria.
+
+>> OK: rechazado por Kyverno
+
+----- Politica require-non-root: tests/kyverno/pod-root.yaml -----
+$ kubectl apply -f tests/kyverno/pod-root.yaml
+Error from server: error when creating "tests/kyverno/pod-root.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy require-non-root failed: Los contenedores tienen que correr con runAsNonRoot: true (en el pod o en cada contenedor).
+
+>> OK: rechazado por Kyverno
+
+----- Politica disallow-privileged: tests/kyverno/pod-privilegiado.yaml -----
+$ kubectl apply -f tests/kyverno/pod-privilegiado.yaml
+Error from server: error when creating "tests/kyverno/pod-privilegiado.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy disallow-privileged failed: No se permiten contenedores privilegiados (privileged: true).
+
+>> OK: rechazado por Kyverno
+
+----- Autogen: un Deployment que no cumple se rechaza directamente -----
+(--dry-run=server: pasa por Kyverno pero no crea nada)
+$ kubectl create deployment prueba-autogen --image=busybox:latest --dry-run=server
+error: failed to create deployment: admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy require-requests-limits failed: Todos los contenedores tienen que definir requests y limits de cpu y memoria.; Policy disallow-latest-tag failed: Las imagenes tienen que tener una etiqueta fija, no se permite latest ni dejarla sin etiqueta.; Policy require-non-root failed: Los contenedores tienen que correr con runAsNonRoot: true (en el pod o en cada contenedor).
+
+===== 4. Manifiestos que cumplen todas las politicas =====
+----- Pod de control -----
+$ kubectl apply -f tests/kyverno/pod-valido.yaml
+pod/pod-valido created
+
+$ kubectl delete pod pod-valido --now
+pod "pod-valido" deleted from default namespace
+
+----- Deployments de la aplicacion (blue y green) -----
+(rollout restart crea pods nuevos, que vuelven a pasar por Kyverno)
+$ kubectl apply -f blue.yaml -f green.yaml
+deployment.apps/menu-app-blue unchanged
+deployment.apps/menu-app-green unchanged
+
+$ kubectl rollout restart deployment/menu-app-blue deployment/menu-app-green
+deployment.apps/menu-app-blue restarted
+deployment.apps/menu-app-green restarted
+
+$ kubectl rollout status deployment/menu-app-blue --timeout=120s
+Waiting for deployment spec update to be observed...
+Waiting for deployment "menu-app-blue" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "menu-app-blue" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "menu-app-blue" rollout to finish: 1 old replicas are pending termination...
+deployment "menu-app-blue" successfully rolled out
+
+$ kubectl rollout status deployment/menu-app-green --timeout=120s
+deployment "menu-app-green" successfully rolled out
+
+$ kubectl get pods -l app=menu-app
+NAME                             READY   STATUS        RESTARTS        AGE
+menu-app-blue-85bdb665d4-tkv64   1/1     Running       0               26s
+menu-app-green-d5885db5-rrxt5    1/1     Running       0               26s
+menu-app-green-f8df5449f-vv9wm   1/1     Terminating   1 (2m36s ago)   11d
+
+===== Resumen =====
+Rechazados correctamente: 4 de 4
+Aceptados por error:      0
