@@ -14,7 +14,7 @@ spec:
       matchExpressions:
       - key: kubernetes.io/metadata.name
         operator: NotIn
-        values: [kube-system, kyverno, falco]
+        values: [kube-system, kyverno, falco, monitoring]
   autogen:
     podControllers:
       controllers: [deployments, replicasets, statefulsets, daemonsets, jobs, cronjobs]
