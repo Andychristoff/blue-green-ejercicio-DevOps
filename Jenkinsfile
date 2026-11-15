@@ -14,9 +14,11 @@ pipeline {
     }
 
     environment {
-        IMAGE_REPO = 'luispee/menu-app'
+        // Repositorio de la imagen y namespace destino: se pueden definir como variables
+        // de entorno globales de Jenkins (DOCKER_IMAGE_REPO, K8S_NAMESPACE)
+        IMAGE_REPO = "${env.DOCKER_IMAGE_REPO ?: 'luispee/menu-app'}"
         IMAGE_TAG  = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'local'}"
-            NAMESPACE  = 'default'
+        NAMESPACE  = "${env.K8S_NAMESPACE ?: 'default'}"
         // Falla el pipeline si se detectan vulnerabilidades de esta severidad o mayor
         SEVERITY_THRESHOLD = 'critical'
     }
@@ -44,10 +46,12 @@ pipeline {
         stage('Escaneo de dependencias (Snyk)') {
             steps {
                 withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
-                    // Código de salida 1 = vulnerabilidades >= umbral => el pipeline se detiene
+                    // Código de salida 1 = vulnerabilidades >= umbral => el pipeline se detiene.
+                    // Se lee package-lock.json porque en esta etapa todavía no existe node_modules,
+                    // y --dev incluye vite, que figura como devDependency pero sirve la app en producción.
                     sh '''
                         set -o pipefail
-                        snyk test --file=package.json --severity-threshold=${SEVERITY_THRESHOLD} \
+                        snyk test --file=package-lock.json --dev --severity-threshold=${SEVERITY_THRESHOLD} \
                             | tee reports/snyk-report.txt
                     '''
                 }

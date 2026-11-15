@@ -1,0 +1,65 @@
+# Configuracion de Jenkins como codigo (plugin Configuration as Code).
+# Los valores ${...} salen de las variables de entorno del contenedor (jenkins/secretos.env).
+jenkins:
+  systemMessage: "Jenkins local para el pipeline de menu-app"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: DOCKER_IMAGE_REPO
+            value: "${DOCKER_IMAGE_REPO}"
+          - key: K8S_NAMESPACE
+            value: "${K8S_NAMESPACE}"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: dockerhub-credentials
+              description: "Docker Hub"
+              username: "${DOCKERHUB_USER}"
+              password: "${DOCKERHUB_TOKEN}"
+          - string:
+              scope: GLOBAL
+              id: snyk-token
+              description: "Token de Snyk"
+              secret: "${SNYK_TOKEN}"
+          - file:
+              scope: GLOBAL
+              id: kubeconfig
+              description: "kubeconfig del cluster destino"
+              fileName: kubeconfig
+              secretBytes: "${KUBECONFIG_B64}"
+
+unclassified:
+  location:
+    url: "http://localhost:8080/"
+
+jobs:
+  - script: >
+      pipelineJob('menu-app') {
+        description('Pipeline CI/CD de menu-app (Jenkinsfile del repositorio)')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${GIT_REPO_URL}') }
+                branch('${GIT_BRANCH}')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }
