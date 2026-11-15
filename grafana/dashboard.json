@@ -1,12 +1,12 @@
 {
   "uid": "menu-app",
-  "title": "Menu App - Órdenes y tráfico",
+  "title": "Menu App - Ã“rdenes y trÃ¡fico",
   "tags": [
     "menu-app"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "10s",
   "time": {
     "from": "now-30m",
@@ -16,7 +16,7 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "Órdenes totales (últimos 5 min)",
+      "title": "Ã“rdenes totales (Ãºltimos 5 min)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -60,7 +60,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Versión desplegada",
+      "title": "VersiÃ³n desplegada",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -151,7 +151,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Segundos desde la última orden",
+      "title": "Segundos desde la Ãºltima orden",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -191,7 +191,7 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Órdenes por producto (ventana de 5 min) - alerta en 10",
+      "title": "Ã“rdenes por producto (ventana de 5 min) - alerta en 10",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -241,7 +241,7 @@
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Órdenes por minuto",
+      "title": "Ã“rdenes por minuto",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -260,7 +260,7 @@
             "uid": "prometheus"
           },
           "expr": "sum(rate(menu_orders_total[1m])) * 60",
-          "legendFormat": "órdenes/min"
+          "legendFormat": "Ã³rdenes/min"
         }
       ],
       "fieldConfig": {
@@ -326,6 +326,105 @@
             "uid": "prometheus"
           },
           "expr": "process_resident_memory_bytes{job=\"menu-app-service\"}",
+          "legendFormat": "{{pod}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Latencia promedio de respuesta",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(http_request_duration_seconds_sum{job=\"menu-app-service\"}[1m])) / sum(rate(http_request_duration_seconds_count{job=\"menu-app-service\"}[1m]))",
+          "legendFormat": "latencia promedio"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Uso de CPU por pod",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"default\",pod=~\"menu-app-.*\",container!=\"\",container!=\"POD\"}[1m]))",
+          "legendFormat": "{{pod}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Uso de memoria por pod (working set)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"default\",pod=~\"menu-app-.*\",container!=\"\",container!=\"POD\"})",
           "legendFormat": "{{pod}}"
         }
       ],
