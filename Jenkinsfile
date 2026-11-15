@@ -44,10 +44,12 @@ pipeline {
         stage('Escaneo de dependencias (Snyk)') {
             steps {
                 withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
-                    // Código de salida 1 = vulnerabilidades >= umbral => el pipeline se detiene
+                    // Código de salida 1 = vulnerabilidades >= umbral => el pipeline se detiene.
+                    // Se lee package-lock.json porque en esta etapa todavía no existe node_modules,
+                    // y --dev incluye vite, que figura como devDependency pero sirve la app en producción.
                     sh '''
                         set -o pipefail
-                        snyk test --file=package.json --severity-threshold=${SEVERITY_THRESHOLD} \
+                        snyk test --file=package-lock.json --dev --severity-threshold=${SEVERITY_THRESHOLD} \
                             | tee reports/snyk-report.txt
                     '''
                 }
