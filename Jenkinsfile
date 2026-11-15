@@ -14,9 +14,11 @@ pipeline {
     }
 
     environment {
-        IMAGE_REPO = 'luispee/menu-app'
+        // Repositorio de la imagen y namespace destino: se pueden definir como variables
+        // de entorno globales de Jenkins (DOCKER_IMAGE_REPO, K8S_NAMESPACE)
+        IMAGE_REPO = "${env.DOCKER_IMAGE_REPO ?: 'luispee/menu-app'}"
         IMAGE_TAG  = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'local'}"
-            NAMESPACE  = 'default'
+        NAMESPACE  = "${env.K8S_NAMESPACE ?: 'default'}"
         // Falla el pipeline si se detectan vulnerabilidades de esta severidad o mayor
         SEVERITY_THRESHOLD = 'critical'
     }
