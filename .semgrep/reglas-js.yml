@@ -1,0 +1,24 @@
+rules:
+  - id: no-eval
+    languages: [javascript]
+    severity: ERROR
+    message: >-
+      Se usa eval() o new Function(), que ejecutan texto como codigo. Si ese texto
+      viene del usuario permite inyectar codigo. Usar JSON.parse() o logica explicita.
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+
+  - id: no-dangerously-set-inner-html
+    languages: [javascript]
+    severity: ERROR
+    message: >-
+      Se usa dangerouslySetInnerHTML, que inserta HTML sin escapar en la pagina.
+      Si el contenido viene del usuario permite XSS. Renderizar el texto con JSX.
+    pattern: <$EL dangerouslySetInnerHTML={$HTML} />
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting (XSS)"
