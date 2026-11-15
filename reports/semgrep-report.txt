@@ -1,10 +1,12 @@
 # Semgrep 1.184.0 - analisis estatico del codigo JavaScript/React
 # Fecha: 2026-11-15
-# Comando:
+# Comando (mismos conjuntos de reglas y archivos que la etapa de Semgrep del Jenkinsfile):
 #   docker run --rm -v "${PWD}:/src" -w /src semgrep/semgrep:1.184.0 semgrep scan \
-#     --config .semgrep/reglas-js.yml --config p/javascript --config p/react --metrics=off
-# Reglas propias (.semgrep/reglas-js.yml): no-eval, no-dangerously-set-inner-html
-# Archivos analizados: src/App.jsx, src/main.jsx, src/components/MenuItem.jsx,
+#     --config p/javascript --config p/react --config p/security-audit --metrics=off src vite.config.js
+# Reglas de la comunidad (registro de Semgrep). Reglas de seguridad para JavaScript destacadas:
+#   - javascript.lang.security.detect-eval-with-expression (CWE-95, inyeccion de codigo)
+#   - typescript.react.security.audit.react-dangerouslysetinnerhtml (CWE-79, XSS)
+# Archivos JavaScript analizados: src/App.jsx, src/main.jsx, src/components/MenuItem.jsx,
 #   src/components/MenuList.jsx, src/components/SearchBar.jsx, src/data/menu.js, vite.config.js
 
                
@@ -12,8 +14,13 @@
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
-  Scanning 46 files tracked by git with 76 Code rules:
-  Scanning 7 files with 70 js rules.
+  Scanning 9 files tracked by git with 292 Code rules:
+                                                                                                                        
+  Language      Rules   Files          Origin      Rules                                                                
+ ─────────────────────────────        ───────────────────                                                               
+  <multilang>       2       9          Community     292                                                                
+  js               81       7                                                                                           
+                                                                                                                        
                 
                 
 ┌──────────────┐
@@ -21,12 +28,12 @@
 └──────────────┘
 ✅ Scan completed successfully.
  • Findings: 0 (0 blocking)
- • Rules run: 70
- • Targets scanned: 7
+ • Rules run: 83
+ • Targets scanned: 9
  • Parsed lines: ~100.0%
  • Scan was limited to files tracked by git
  • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
-Ran 70 rules on 7 files: 0 findings.
+Ran 83 rules on 9 files: 0 findings.
 (need more rules? `semgrep login` for additional free Semgrep Registry rules)
 
 If Semgrep missed a finding, please send us feedback to let us know!
