@@ -221,7 +221,7 @@ No hay un backend aparte: el servidor que ya sirve la app (`vite preview`) incor
 | `monitoring/prometheusrule.yaml` | Reglas de alerta (ver más abajo). |
 | `monitoring/alertmanagerconfig.yaml` | Envía las alertas por correo a Outlook (SMTP). |
 | `monitoring/values.yaml` | Valores del Helm chart: expone Prometheus, Alertmanager y Grafana con NodePort. |
-| `monitoring/grafana-dashboard.json` | Dashboard de órdenes y tráfico. |
+| `grafana/dashboard.json` | Dashboard de órdenes y tráfico. |
 
 ### Métricas expuestas
 
@@ -274,7 +274,7 @@ El nombre del release (`monitoring-stack`) tiene que coincidir con la label `rel
 kubectl apply -f monitoring/servicemonitor.yaml
 kubectl apply -f monitoring/prometheusrule.yaml
 
-kubectl create configmap menu-app-dashboard -n monitoring --from-file=monitoring/grafana-dashboard.json
+kubectl create configmap menu-app-dashboard -n monitoring --from-file=grafana/dashboard.json
 kubectl label configmap menu-app-dashboard -n monitoring grafana_dashboard=1
 ```
 
@@ -350,4 +350,113 @@ Regla práctica: si la pregunta es "¿cuántas veces pasó?", es un Counter; si 
    - `sum(rate(http_request_duration_seconds_count[1m]))`: requests HTTP por segundo.
 5. Elegir el tipo de visualización (time series, stat, gauge, tabla), ajustar unidades, leyenda (`{{product}}`) y umbrales, y guardar el panel.
 
-Los paneles de `monitoring/grafana-dashboard.json` están definidos exactamente así: cada uno es una consulta PromQL contra el data source Prometheus.
+Los paneles de `grafana/dashboard.json` están definidos exactamente así: cada uno es una consulta PromQL contra el data source Prometheus.
+
+---
+
+# Laboratorio 4: Trabajo integrador
+
+Esta sección documenta lo agregado en el Laboratorio 4 para los puntos de **CI/CD con Jenkins** (3) y **monitoreo y observabilidad** (4). El punto 2 (Kubernetes + Helm) se omite por indicación del profesor: el despliegue sigue haciéndose con los manifiestos `blue.yaml`, `green.yaml` y `service.yaml`.
+
+## Pipeline de CI/CD (Jenkins)
+
+El pipeline está definido en el [`Jenkinsfile`](Jenkinsfile) de la raíz del repositorio y se ejecuta de forma declarativa sobre cualquier agente que tenga instaladas las herramientas necesarias.
+
+### Requisitos en Jenkins
+
+| Requisito | Detalle |
+|---|---|
+| Herramientas en el agente | `docker`, `node`/`npm`, `semgrep`, `snyk`, `kubectl` |
+| Credencial `dockerhub-credentials` | Usuario y contraseña (o token) de Docker Hub |
+| Credencial `snyk-token` | Secret text con el API token de Snyk |
+| Credencial `kubeconfig` | Secret file con el kubeconfig del cluster k3s |
+
+Se crean en **Manage Jenkins → Credentials**. Luego se crea un job de tipo **Pipeline** (o **Multibranch Pipeline**) con *Pipeline script from SCM* apuntando a este repositorio, rama `main`.
+
+### Etapas
+
+| # | Etapa | Herramienta | Qué hace | Cuándo corta el pipeline |
+|---|---|---|---|---|
+| 1 | Clonación del repositorio | Git (`checkout scm`) | Obtiene el código y muestra el último commit. | Falla el checkout. |
+| 2 | Análisis estático | Semgrep | Escanea `src/` y `vite.config.js` con los rulesets `p/javascript`, `p/react` y `p/security-audit`. Guarda la salida en `reports/semgrep-report.txt`. | Cualquier hallazgo de severidad `ERROR` (`--error`). |
+| 3 | Escaneo de dependencias | Snyk | Ejecuta `snyk test` sobre `package.json`. Guarda la salida en `reports/snyk-report.txt`. | Vulnerabilidades de severidad `critical` o mayor (`--severity-threshold=critical`). |
+| 4 | Build y test | npm | `npm ci`, `npm run lint` (oxlint) y `npm run build`. | Falla el lint o el build. |
+| 5 | Build y publicación de la imagen | Docker | Construye `luispee/menu-app:<build>-<commit>` y la publica en Docker Hub. | Falla el build o el push. |
+| 6 | Despliegue automático | kubectl | Despliega la versión green con la imagen recién publicada y espera a que el rollout termine. | Falla el `rollout status` (120 s). |
+
+Observaciones sobre el diseño:
+
+- **Corte por vulnerabilidades críticas.** Semgrep y Snyk devuelven un código de salida distinto de cero cuando encuentran hallazgos por encima del umbral, y Jenkins detiene el pipeline en esa etapa. El umbral de Snyk es la variable `SEVERITY_THRESHOLD` del `Jenkinsfile`.
+- **Registros de cada fase.** Se usan `timestamps()` en todas las líneas del log, y los reportes de seguridad se archivan como artefactos del build (`archiveArtifacts`).
+- **"Test" de la aplicación.** El proyecto no tiene una suite de tests; la etapa 4 valida con el linter y con la compilación de producción. Agregar tests (por ejemplo con Vitest) es una oportunidad de mejora.
+- **Tag de la imagen.** Se compone de número de build y hash corto del commit, nunca `latest`, para cumplir la política de Kyverno `disallow-latest-tag` y poder rastrear qué código está desplegado.
+- **Despliegue sin Helm.** Los manifiestos usan `imagePullPolicy: Never` porque en el Entregable 1 la imagen se importaba a mano a k3s. El pipeline genera una copia (`green-deploy.yaml`) con la imagen del registro y `imagePullPolicy: IfNotPresent`, sin modificar los manifiestos versionados. Luego aplica esa copia y `service.yaml`.
+
+### Ejecución
+
+1. Hacer push a `main` (o ejecutar **Build Now** en el job).
+2. Abrir el build y ver **Console Output**. Cada etapa se ve en **Pipeline Stages** / Blue Ocean.
+3. Para provocar un corte por seguridad, agregar una dependencia con una vulnerabilidad crítica conocida: la etapa de Snyk falla y las siguientes (build, imagen, despliegue) no se ejecutan.
+4. Verificar el despliegue:
+
+```bash
+kubectl get pods -l app=menu-app
+kubectl get deployment menu-app-green -o jsonpath='{.spec.template.spec.containers[0].image}'
+```
+
+> Pendiente: agregar capturas de la ejecución del pipeline (vista de etapas y consola) una vez corrido contra el cluster.
+
+## Métricas y dashboard de Grafana
+
+La aplicación ya exponía `/metrics` (ver Entregable 2). Para el Laboratorio 4 se completó el dashboard con las métricas que faltaban y se movió a la ruta pedida: [`grafana/dashboard.json`](grafana/dashboard.json) (antes `monitoring/grafana-dashboard.json`). Además se convirtió el archivo a UTF-8, porque estaba en cp1252 y los acentos se corrompían.
+
+El dashboard **Menu App - Órdenes y tráfico** (UID `menu-app`, versión 2) tiene 11 paneles:
+
+| Requisito del enunciado | Panel | Consulta PromQL |
+|---|---|---|
+| RPS | Requests HTTP por segundo | `sum by (method, status_code) (rate(http_request_duration_seconds_count[1m]))` |
+| Latencia promedio | **Latencia promedio de respuesta** (nuevo) | `sum(rate(http_request_duration_seconds_sum{job="menu-app-service"}[1m])) / sum(rate(http_request_duration_seconds_count{job="menu-app-service"}[1m]))` |
+| CPU por pod | **Uso de CPU por pod** (nuevo) | `sum by (pod) (rate(container_cpu_usage_seconds_total{namespace="default",pod=~"menu-app-.*",container!="",container!="POD"}[1m]))` |
+| Memoria por pod | **Uso de memoria por pod (working set)** (nuevo) y Memoria del proceso (RSS) | `sum by (pod) (container_memory_working_set_bytes{namespace="default",pod=~"menu-app-.*",container!="",container!="POD"})` |
+| Métrica de negocio | Órdenes totales, órdenes por producto, órdenes por minuto, segundos desde la última orden | `sum by (product) (increase(menu_orders_total[5m]))`, `sum(rate(menu_orders_total[1m])) * 60` |
+| Estado | Versión desplegada, Pods de la app arriba | `menu_app_info`, `sum(up{job="menu-app-service"})` |
+
+Los paneles de CPU y memoria usan métricas de cAdvisor (`container_*`), que `kube-prometheus-stack` ya scrapea desde el kubelet. Los filtros asumen el namespace `default` y pods cuyo nombre empieza con `menu-app-`.
+
+### Cargar el dashboard
+
+```bash
+kubectl create configmap menu-app-dashboard -n monitoring --from-file=grafana/dashboard.json
+kubectl label configmap menu-app-dashboard -n monitoring grafana_dashboard=1
+```
+
+Si el ConfigMap ya existe (por una versión anterior), reemplazarlo:
+
+```bash
+kubectl create configmap menu-app-dashboard -n monitoring \
+  --from-file=grafana/dashboard.json --dry-run=client -o yaml | kubectl apply -f -
+kubectl label configmap menu-app-dashboard -n monitoring grafana_dashboard=1 --overwrite
+```
+
+Para poblar los paneles hay que generar tráfico y órdenes (ver la sección **Verificación** del Entregable 2).
+
+> Pendiente: agregar una captura del dashboard con datos.
+
+## Resumen de cambios de esta etapa
+
+| Cambio | Archivo |
+|---|---|
+| Pipeline CI/CD con 6 etapas y corte por vulnerabilidades críticas | `Jenkinsfile` (nuevo) |
+| Dashboard movido a la ruta pedida y convertido a UTF-8 | `grafana/dashboard.json` (antes `monitoring/grafana-dashboard.json`) |
+| Paneles de latencia promedio, CPU por pod y memoria por pod | `grafana/dashboard.json` |
+| Referencias actualizadas a la nueva ruta del dashboard | `README.md` |
+
+## Pendiente del Laboratorio 4
+
+- Punto 2 (Helm): omitido por indicación del profesor.
+- Punto 1.e: `reports/image-analysis.md` (tamaño, capas y observaciones, con Dive).
+- Punto 5.2: `reports/snyk-report.txt`.
+- Punto 5.3: cuarta política de Kyverno y `reports/kyverno-validation.log`.
+- Punto 5.4: evento de Falco que no sea abrir un shell.
+- Scripts de inicialización, generación de tráfico y limpieza.
+- Informe final: diagrama de arquitectura, problemas encontrados y conclusiones.
