@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:24.11.0-alpine3.21 AS build
 
 ARG VITE_APP_VERSION=2.0.0-green
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
@@ -11,7 +11,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:24-alpine
+FROM node:24.11.0-alpine3.21
 
 ARG VITE_APP_VERSION=2.0.0-green
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
