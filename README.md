@@ -442,6 +442,198 @@ Para poblar los paneles hay que generar tráfico y órdenes (ver la sección **V
 
 > Pendiente: agregar una captura del dashboard con datos.
 
+## Arquitectura final y diagramas
+
+Los diagramas están escritos en Mermaid: GitHub los renderiza directamente al ver este archivo. Para exportarlos como imagen se pueden pegar en [mermaid.live](https://mermaid.live).
+
+### Diagrama de componentes
+
+Muestra qué piezas componen el sistema y cómo se relacionan entre sí, sin importar dónde corren.
+
+```mermaid
+flowchart LR
+    user(["Usuario / navegador"])
+
+    subgraph app["Aplicación: Blue Plate Diner"]
+        direction TB
+        ui["Frontend React + Vite<br/>(menú y búsqueda)"]
+        api["Middleware de vite preview<br/>POST /api/orders y GET /metrics<br/>(prom-client + express-prom-bundle)"]
+        ui --> api
+    end
+
+    subgraph obs["Observabilidad"]
+        direction TB
+        sm["ServiceMonitor"]
+        prom["Prometheus"]
+        rules["PrometheusRule<br/>(3 alertas)"]
+        am["Alertmanager"]
+        graf["Grafana<br/>dashboard.json"]
+        sm --> prom
+        prom --> rules
+        rules --> am
+        prom --> graf
+    end
+
+    subgraph sec["Seguridad"]
+        direction TB
+        kyv["Kyverno<br/>ValidatingPolicies"]
+        falco["Falco<br/>runtime"]
+    end
+
+    subgraph ci["CI/CD"]
+        direction TB
+        gh["GitHub<br/>(repositorio)"]
+        jenk["Jenkins<br/>(Jenkinsfile)"]
+        semg["Semgrep"]
+        snyk["Snyk"]
+        reg[("Docker Hub<br/>luispee/menu-app")]
+        gh --> jenk
+        jenk --> semg
+        jenk --> snyk
+        jenk --> reg
+    end
+
+    mail(["Correo Outlook"])
+
+    user -->|"HTTP :30007"| ui
+    sm -.->|"scrape /metrics cada 15 s"| api
+    am -->|"SMTP 587 STARTTLS"| mail
+    graf -->|"consulta PromQL"| prom
+    kyv -.->|"admite o rechaza pods"| app
+    falco -.->|"observa syscalls"| app
+    jenk -->|"kubectl apply"| app
+```
+
+| Componente | Responsabilidad |
+|---|---|
+| Frontend React + Vite | Muestra el menú y el botón **Order** de cada plato. |
+| Middleware de `vite preview` | Atiende `POST /api/orders` (incrementa `menu_orders_total`) y expone `/metrics`. |
+| ServiceMonitor / Prometheus | Scrapea las métricas y las almacena como series temporales. |
+| PrometheusRule / Alertmanager | Evalúa las reglas de alerta y envía el aviso por correo. |
+| Grafana | Dashboard con RPS, latencia, CPU y memoria por pod y métricas de negocio. |
+| Kyverno | Rechaza en el momento de crear pods que usan `latest`, corren como root o no definen requests y limits. |
+| Falco | Detecta comportamiento sospechoso en tiempo de ejecución. |
+| Jenkins, Semgrep, Snyk | Automatizan análisis, build, publicación y despliegue. |
+
+### Diagrama de despliegue
+
+Muestra dónde corre cada pieza: la VM de Azure con k3s, los namespaces y los puertos expuestos.
+
+```mermaid
+flowchart TB
+    dev(["Desarrollador"])
+    gh["GitHub<br/>repositorio"]
+    hub[("Docker Hub<br/>imágenes")]
+    mail(["Outlook<br/>smtp-mail.outlook.com:587"])
+    client(["Navegador del usuario"])
+
+    dev -->|"git push"| gh
+
+    subgraph azure["VM Ubuntu en Azure (NSG con puertos abiertos)"]
+        jenk["Jenkins<br/>agente con docker, node, semgrep,<br/>snyk y kubectl"]
+
+        subgraph k3s["Cluster k3s (containerd)"]
+            subgraph nsdef["namespace: default"]
+                svc["Service menu-app-service<br/>NodePort 30007 a 4173<br/>selector: version=green"]
+                green["Deployment menu-app-green<br/>pod menu-app :4173"]
+                blue["Deployment menu-app-blue<br/>pod menu-app :4173"]
+                svc --> green
+                svc -.->|"cambio de versión"| blue
+            end
+
+            subgraph nsmon["namespace: monitoring (kube-prometheus-stack)"]
+                prom["Prometheus<br/>NodePort 30090"]
+                am["Alertmanager<br/>NodePort 30093"]
+                graf["Grafana<br/>NodePort 30030"]
+                op["Prometheus Operator"]
+            end
+
+            subgraph nskyv["namespace: kyverno"]
+                kyv["Kyverno<br/>admission controller"]
+            end
+
+            subgraph nsfalco["namespace: falco"]
+                falco["Falco<br/>DaemonSet"]
+            end
+        end
+    end
+
+    gh -->|"webhook / polling"| jenk
+    jenk -->|"docker push"| hub
+    jenk -->|"kubectl apply"| k3s
+    hub -->|"pull de la imagen"| green
+    client -->|"HTTP 30007"| svc
+    client -->|"HTTP 30030"| graf
+    prom -->|"scrape /metrics"| green
+    prom -->|"scrape /metrics"| blue
+    prom --> am
+    graf --> prom
+    am -->|"correo de alerta"| mail
+    kyv -.->|"valida cada pod nuevo"| nsdef
+    falco -.->|"syscalls del kernel"| nsdef
+```
+
+| Elemento | Detalle |
+|---|---|
+| VM | Ubuntu en Azure; las PCs del grupo no tenían RAM suficiente para el cluster. |
+| Cluster | k3s de un solo nodo, con containerd como runtime. |
+| Acceso a la app | `http://<IP>:30007`. |
+| Acceso a monitoreo | Prometheus `30090`, Alertmanager `30093`, Grafana `30030`. |
+| Blue/Green | Ambos Deployments corren a la vez. El Service apunta a la versión que indica su selector (`version: green`). Cambiar ese valor cambia la versión que ven los usuarios. |
+
+> Los namespaces `kyverno` y `falco` son los habituales de sus instalaciones con Helm. Si se instalaron en otro, ajustar el diagrama.
+
+### Diagrama de flujo del pipeline
+
+Muestra las etapas del `Jenkinsfile`, en qué puntos se detiene y qué se genera en cada una.
+
+```mermaid
+flowchart TD
+    start(["Push a main / Build Now"]) --> s1
+
+    s1["1. Clonación<br/>checkout scm"]
+    s2["2. Análisis estático<br/>Semgrep: p/javascript, p/react, p/security-audit"]
+    s3["3. Escaneo de dependencias<br/>Snyk: umbral critical"]
+    s4["4. Build y test<br/>npm ci, npm run lint, npm run build"]
+    s5["5. Build y publicación<br/>docker build y docker push"]
+    s6["6. Despliegue<br/>kubectl apply y rollout status"]
+    ok(["Pipeline exitoso<br/>versión nueva en producción"])
+
+    s1 --> s2
+    s2 -->|"sin hallazgos ERROR"| s3
+    s3 -->|"sin vulnerabilidades críticas"| s4
+    s4 -->|"lint y build correctos"| s5
+    s5 -->|"imagen publicada"| s6
+    s6 -->|"rollout completo"| ok
+
+    f1{{"FALLA: pipeline detenido"}}
+    s1 -.->|"error de checkout"| f1
+    s2 -.->|"hallazgos de severidad ERROR"| f1
+    s3 -.->|"vulnerabilidad crítica"| f1
+    s4 -.->|"lint o build fallido"| f1
+    s5 -.->|"build o push fallido"| f1
+    s6 -.->|"rollout fuera de 120 s"| f1
+
+    r2[/"reports/semgrep-report.txt"/]
+    r3[/"reports/snyk-report.txt"/]
+    img[/"luispee/menu-app:BUILD-COMMIT"/]
+    s2 -.-> r2
+    s3 -.-> r3
+    s5 -.-> img
+    r2 --> arch["archiveArtifacts"]
+    r3 --> arch
+    f1 --> arch
+
+    classDef stage fill:#e8f0fe,stroke:#3b6fd4,color:#111
+    classDef fail fill:#fde8e8,stroke:#c0392b,color:#111
+    classDef good fill:#e6f4ea,stroke:#2e7d32,color:#111
+    class s1,s2,s3,s4,s5,s6 stage
+    class f1 fail
+    class ok good
+```
+
+Los controles de seguridad (etapas 2 y 3) están antes del build y de la publicación a propósito: si hay un problema crítico, nunca se construye ni se publica la imagen, ni se llega al cluster. Aun así, si algo se colara, Kyverno lo rechaza al admitir el pod y Falco lo vigila en ejecución.
+
 ## Resumen de cambios de esta etapa
 
 | Cambio | Archivo |
@@ -450,6 +642,7 @@ Para poblar los paneles hay que generar tráfico y órdenes (ver la sección **V
 | Dashboard movido a la ruta pedida y convertido a UTF-8 | `grafana/dashboard.json` (antes `monitoring/grafana-dashboard.json`) |
 | Paneles de latencia promedio, CPU por pod y memoria por pod | `grafana/dashboard.json` |
 | Referencias actualizadas a la nueva ruta del dashboard | `README.md` |
+| Diagramas de componentes, despliegue y flujo del pipeline (Mermaid) | `README.md` |
 
 ## Pendiente del Laboratorio 4
 
